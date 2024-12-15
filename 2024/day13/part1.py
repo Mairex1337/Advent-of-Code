@@ -1,10 +1,3 @@
-"""
-- 3 tokens A
-- 1 token B
-- Max 100 presses per button
-- Result: Sum of tokens to win all possible prizes
-"""
-
 def solve_equations(equation1: tuple, equation2: tuple) -> int:
     cost_a = 3
     cost_b = 1
