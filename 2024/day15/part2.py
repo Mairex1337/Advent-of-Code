@@ -92,7 +92,7 @@ def get_box_layout(
     new_pos = (robot[0] + move[0], robot[1] + move[1])
     if not check_valid(new_pos, walls, row_dim, col_dim):
         return boxes, robot
-    if new_pos not in boxes.keys():  # This seems to never work. Why?
+    if new_pos not in boxes.keys():
         return boxes, new_pos
     if move[0] == 0: # horizontal dir
         return horizontal_move(boxes, robot_pos, new_pos, walls, move, row_dim, col_dim)
