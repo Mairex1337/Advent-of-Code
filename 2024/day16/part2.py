@@ -93,53 +93,48 @@ def dijkstras(
         g: WeightedGraph,
         start: tuple,
         goal: tuple,
-        prev_visited: set = {},
-        optimal_cost: int = 10000000
-) -> tuple[int, set]:
+) -> dict:
     heap = MinHeap()
-    heap.enqueue((0, start, {start}))
-    seen = set() if prev_visited == {} else prev_visited
+    heap.enqueue((0, start))
+    optimal_paths = dict()
+    optimal_cost = None
+    costs = dict()
     while len(heap) > 0:
-        cost, node, tiles = heap.dequeue()
-        if node in seen:
-            continue
-        if cost > optimal_cost:
-            return -1, {}
+        cost, node = heap.dequeue()
         if node == goal:
-            return cost, tiles
-        seen.add(node)  # increment by one later the total
+            if optimal_cost is None:
+                optimal_cost = cost
+            continue
+        if optimal_cost is not None and cost > optimal_cost:
+            break
         for neighbors in g.graph[node]:
             other = neighbors.get_other(node)
-            if other not in seen:
-                new_cost = cost + neighbors.get_weight()
-                heap.enqueue((new_cost, other, tiles | {other}))
-    return -1, {}
+            new_cost = neighbors.get_weight() + cost
+            if new_cost < costs.get(other, float('inf')):
+                heap.enqueue((new_cost, other))
+                costs[other] = new_cost
+                optimal_paths[other] = {node}
+            elif new_cost == costs.get(other, float('inf')):
+                optimal_paths[other].add(node)
+    
+    return optimal_paths
 
-
-def get_all_locations(g: WeightedGraph, start: tuple, goal: tuple) -> set:
-    optimal_cost, tiles = dijkstras(g, start, goal)
-    i = 0
-    while i < 1:
-        to_be_added = set()
-        z = 0
-        for location in tiles:
-            print(f'Current iteration at depth {i}: {z}')
-            if location == start:
-                continue
-            new_cost, new_tiles = dijkstras(
-                g, start, goal, {location}, optimal_cost
-            )
-            z += 1
-            if new_cost != optimal_cost:
-                continue
-            to_be_added |= new_tiles
-        tiles |= to_be_added
-        i += 1
-    return tiles
+def get_unique_locations(g: WeightedGraph, start: tuple, goal: tuple) -> int:
+    optimal_paths = dijkstras(g, start, goal)
+    stack = [goal]
+    tiles_with_dir = set()
+    while stack:
+        current = stack.pop()
+        if current in tiles_with_dir:
+            continue
+        tiles_with_dir.add(current)
+        for node in optimal_paths[current]:
+            stack.append(node)
+    tiles_unique = {(x[0], x[1]) for x in tiles_with_dir}
+    return len(tiles_unique)
 
 if __name__ == "__main__":
     import time
-    from copy import deepcopy
     with open('input.txt', 'r') as t:
         grid = t.read().strip().splitlines()
 
@@ -149,7 +144,7 @@ if __name__ == "__main__":
         (0, -1),
         (-1, 0)
     ]
-    begin_g = time.time()
+    start_g = time.time()
     g = WeightedGraph()
     for row in range(len(grid)):
         for col in range(len(grid[0])):
@@ -162,17 +157,9 @@ if __name__ == "__main__":
                 add_edges(g, (row, col), directions, grid)
 
     stop_g = time.time()
-    print(f" Graph edges setup time: {stop_g - begin_g:.4f}")
+    print(f" Graph edges setup time: {stop_g - start_g:.4f}")
     start_d = time.time()
 
-    tiles = get_all_locations(g, start, goal)
+    print(get_unique_locations(g, start, goal))
     stop_d = time.time()
     print(f" Dijkstras search time: {stop_d - start_d:.4f}.")
-
-    tiles_unique = {(node[0], node[1]) for node in tiles}
-    print(f'Number of unique tiles found: {len(tiles_unique)}')
-
-    print('\n'.join(
-        ''.join('O' if (row, col) in tiles_unique else '.' for col in range(1, len(grid[0]) - 1))
-        for row in range(1, len(grid) - 1)
-    ))
