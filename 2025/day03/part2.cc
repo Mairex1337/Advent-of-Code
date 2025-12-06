@@ -28,9 +28,7 @@ size_t find_highest_joltage(string const &line)
         }
         ++idx;
     }
-    size_t answer = gen_answer(arr, arr_len);
-    cout << "Answer found: " << answer << "\n\n";
-    return answer;
+    return gen_answer(arr, arr_len);
     
 }
 
@@ -40,10 +38,7 @@ int main()
     string line;
     size_t result = 0;
     while (getline(ifs, line))
-    {
-        cout << "Current line: " << line << "\n";
         result += find_highest_joltage(line);
-    }
     cout << "Final Result: " << result << "\n";
 }
 
